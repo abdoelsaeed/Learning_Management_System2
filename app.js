@@ -35,21 +35,6 @@ app.use(
   })
 );
 
-//middleware 
-app.use((req, res, next)=> {   
-  var data_stream ='';                 
- 
-  // Readable streams emit 'data' events once a listener is added
-  req.setEncoding('utf-8')            
-  .on('data', function(data) {                         
-    data_stream += data;      
-  })    
-  .on('end', function() {           
-    req.rawBody                                                 
-    req.rawBody = data_stream;   
-    next();
-  }) 
-});
 // Webhook endpoint *قبل* أي middlewares بتعدّل الـ body
 app.post(
   "/webhook-checkout",
