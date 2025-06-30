@@ -38,7 +38,7 @@ exports.getAllCourses = catchAsync(async (req, res, next) => {
   const finalFilter = { ...filter, ...queryObj };
 
   // بناء الاستعلام
-   let query = Course.find(finalFilter).populate('instructor', 'name email');
+   let query = Course.find(finalFilter);
 
   // Sorting
   if (req.query.sort) {
@@ -158,7 +158,7 @@ exports.getOneCourse = catchAsync(async (req, res, next) => {
         course = await Course.findOne({
         _id: courseId,
         status: "published",
-        }).populate("instructor", "name email");
+        });
     }
 
     //^ if instructor
@@ -169,13 +169,13 @@ exports.getOneCourse = catchAsync(async (req, res, next) => {
             { status: "published" },
             { status: "draft", instructor: req.user.id }
             ]
-        }).populate('instructor', 'name email');
+        });
         
     }
 
     //& if admin
     if(role === "admin"){
-        course = await Course.findById(courseId).populate("instructor", "name email");
+        course = await Course.findById(courseId);
     }
     // لو الكورس مش موجود أو مش draft
     if (!course) {

@@ -5,12 +5,18 @@ const AppError = require("./../error/err");
 const Payment = require("./../models/payment.Model");
 const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY);
 const Coupon = require('./../models/coupon.Model');
+const InstructorEarning = require('./../models/instructor_earnings.Model');
+
+
 exports.createEnrollment = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
   const { courseId } = req.params;
   const { couponCode } = req.body; // أو req.query
   const { success_url, cancel_url } = req.query;
 
+  if(await Enrollement.findOne({user_id: userId, course_id: courseId})){
+    return next(new AppError("You are already enrolled in this course", 400));
+  }
   if (!courseId) {
     return next(new AppError("Please provide courseId", 400));
   }
@@ -128,6 +134,12 @@ const createEnrollmentCheckout = async (session) => {
         : "stripe",
       payment_date: new Date(),
     });
+    console.log(course.instructor._id, course._id, amount);
+    await InstructorEarning.create({
+      instructor_id: course.instructor._id,
+      course_id: course._id,
+      amount: amount * 0.8, // 80% من المبلغ
+    });
 
     // (اختياري) لو فيه كوبون، حدث عدد مرات الاستخدام
     // يمكنك تمرير الكوبون في metadata عند إنشاء session
@@ -157,4 +169,50 @@ exports.webhookCheckout = async (req, res, next) => {
     await createEnrollmentCheckout(event.data.object);
   }
   res.status(200).json({ received: true });
+};
+exports.getMyEnrollment = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const enrollments = await Enrollement.find({ user_id: userId })
+    .populate("course_id", "title description price language status image")
+    .populate("user_id", "name email photo");
+  
+  if (!enrollments || enrollments.length === 0) {
+    return next(new AppError("No enrollments found for this user", 404));
+  }
+  
+  res.status(200).json({
+    status: "success",
+    data: enrollments,
+  });
+});
+
+exports.getEnrollments = async (req, res, next) => {
+  const courseId = req.params.courseId;
+  if (!courseId) {
+    return next(new AppError("Please provide courseId", 400));
+  }
+  
+  const enrollments = await Enrollement.find({ course_id: courseId })
+    .populate("user_id", "name email photo");
+  
+  if (!enrollments || enrollments.length === 0) {
+    return next(new AppError("No enrollments found for this course", 404));
+  }
+  
+  res.status(200).json({
+    status: "success",
+    data: enrollments,
+  });
+};
+
+exports.getAllEnrollmentsForAdmin = async (req, res, next) => {
+  const enrollments = await Enrollement.find().populate('user course');
+  
+  res.status(200).json({
+    status: 'success',
+    results: enrollments.length,
+    data: {
+      enrollments
+    }
+  });
 };

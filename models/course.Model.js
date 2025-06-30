@@ -47,6 +47,10 @@ const courseSchema = new mongoose.Schema(
   }
 );
 
+courseSchema.pre(/^find/, function (next) {
+  this.populate({ path: "instructor", select: "name photo email" });
+  next();
+});
 const Course = mongoose.model("Course", courseSchema);
 
 module.exports = Course;
