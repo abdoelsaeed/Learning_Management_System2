@@ -51,12 +51,9 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
 app.get("/favicon.ico", (req, res) => res.status(204));
 app.get("/", (req, res) => res.status(204).send('Welcome to LMS API'));
-app.post(
-  "/webhook-checkout",
-  bodyParser.raw({ type: "application/json" }),
-  enrollmentController.webhookCheckout
-);
+app.post('/webhook-checkout', express.raw({ type: 'application/json' }), enrollmentController.webhookCheckout);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/courses", courseRouter);

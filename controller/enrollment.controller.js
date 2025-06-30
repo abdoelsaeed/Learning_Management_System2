@@ -75,6 +75,10 @@ exports.createEnrollment = catchAsync(async (req, res, next) => {
     cancel_url: cancel_url,
     client_reference_id: userId.toString(),
     customer_email: req.user.email,
+    metadata: {
+      courseId: courseId,
+      couponCode: couponCode || ""
+    }
   });
   return res.status(200).json({
     status: "success",
@@ -94,12 +98,10 @@ const createEnrollmentCheckout = async (session) => {
     const userId = session.client_reference_id;
     const sessionId = session.id;
     const amount = session.amount_total / 100; // Stripe amount is in cents
-    const courseTitle = session.display_items
-      ? session.display_items[0].custom.name
-      : session.line_items[0].price_data.product_data.name;
-
-    // ابحث عن الكورس بالاسم (أو الأفضل أضف courseId في metadata عند إنشاء session)
-    const course = await Course.findOne({ title: courseTitle });
+    // استخدم courseId من metadata
+    const courseId = session.metadata && session.metadata.courseId;
+    if (!courseId) return;
+    const course = await Course.findById(courseId);
     if (!course) return;
 
     // تحقق إذا كان المستخدم مسجل بالفعل
@@ -134,8 +136,10 @@ const createEnrollmentCheckout = async (session) => {
     console.error("Error in createEnrollmentCheckout:", err);
   }
 };
-exports.webhookCheckout = (req, res, next) => {
+exports.webhookCheckout = async (req, res, next) => {
+  console.log("Received webhook request");
   const signature = req.headers["stripe-signature"];
+  console.log("Received webhook signature:", signature);
   let event;
   try {
     event = stripe.webhooks.constructEvent(
@@ -149,7 +153,8 @@ exports.webhookCheckout = (req, res, next) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
   if(event.type === "checkout.session.completed"){
-    createEnrollmentCheckout(event.data.object);
+    console.log("Payment was successful!");
+    await createEnrollmentCheckout(event.data.object);
   }
   res.status(200).json({ received: true });
 };
