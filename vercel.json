@@ -8,6 +8,11 @@
   ],
   "routes": [
     {
+      "src": "/webhook-checkout",
+      "methods": ["POST"],
+      "dest": "server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "server.js"
     }
