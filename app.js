@@ -1,3 +1,4 @@
+process.env.VERCEL_DISABLE_API_BODY_PARSER = "1";
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 const express = require("express");
