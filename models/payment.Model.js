@@ -17,7 +17,7 @@ const paymentSchema = new mongoose.Schema(
       required: true,
       unique: true, // معرف الجلسة فريد
     },
-    amount: {
+    price: {
       type: Number,
       default: 1,
     },

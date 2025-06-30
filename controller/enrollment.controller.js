@@ -122,7 +122,7 @@ const createEnrollmentCheckout = async (session) => {
       student_id: userId,
       course_id: course._id,
       sessionId: sessionId,
-      amount: amount,
+      price: amount,
       payment_method: session.payment_method_types
         ? session.payment_method_types[0]
         : "stripe",
