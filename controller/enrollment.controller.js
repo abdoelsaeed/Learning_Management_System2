@@ -2,6 +2,7 @@ const Course = require("./../models/course.Model");
 const Enrollement = require("./../models/enrollment.Model");
 const catchAsync = require("./../error/catchAsyn");
 const AppError = require("./../error/err");
+const Payment = require("./../models/payment.Model");
 const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY);
 const Coupon = require('./../models/coupon.Model');
 exports.createEnrollment = catchAsync(async (req, res, next) => {
@@ -88,3 +89,67 @@ exports.createEnrollment = catchAsync(async (req, res, next) => {
     },
   });
 });
+const createEnrollmentCheckout = async (session) => {
+  try {
+    const userId = session.client_reference_id;
+    const sessionId = session.id;
+    const amount = session.amount_total / 100; // Stripe amount is in cents
+    const courseTitle = session.display_items
+      ? session.display_items[0].custom.name
+      : session.line_items[0].price_data.product_data.name;
+
+    // ابحث عن الكورس بالاسم (أو الأفضل أضف courseId في metadata عند إنشاء session)
+    const course = await Course.findOne({ title: courseTitle });
+    if (!course) return;
+
+    // تحقق إذا كان المستخدم مسجل بالفعل
+    const alreadyEnrolled = await Enrollement.findOne({
+      user_id: userId,
+      course_id: course._id,
+    });
+    if (alreadyEnrolled) return;
+
+    // أنشئ enrollment
+    await Enrollement.create({
+      user_id: userId,
+      course_id: course._id,
+    });
+
+    // أنشئ payment
+    await Payment.create({
+      student_id: userId,
+      course_id: course._id,
+      sessionId: sessionId,
+      amount: amount,
+      payment_method: session.payment_method_types
+        ? session.payment_method_types[0]
+        : "stripe",
+      payment_date: new Date(),
+    });
+
+    // (اختياري) لو فيه كوبون، حدث عدد مرات الاستخدام
+    // يمكنك تمرير الكوبون في metadata عند إنشاء session
+    // if (session.metadata && session.metadata.couponCode) { ... }
+  } catch (err) {
+    console.error("Error in createEnrollmentCheckout:", err);
+  }
+};
+exports.webhookCheckout = (req, res, next) => {
+  const signature = req.headers["stripe-signature"];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+    req.body,
+    signature,
+    process.env.STRIPE_WEBHOOK_SECRET
+  );
+  }
+  catch (err) {
+    console.log("Error constructing event:", err);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  if(event.type === "checkout.session.completed"){
+    createEnrollmentCheckout(event.data.object);
+  }
+  res.status(200).json({ received: true });
+};

@@ -2,10 +2,12 @@ const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 const express = require("express");
 const rateLimit = require("express-rate-limit");
+const bodyParser = require("body-parser");
 const userRouter = require("./routes/user.routes");
 const courseRouter = require('./routes/course.routes');
 const couponRouter = require('./routes/coupon.routes');
 const enrollRouter = require('./routes/enrollment.routes');
+const enrollmentController = require('./controller/enrollment.controller');
 const session = require('express-session'); 
 const morgan = require("morgan");
 const cors = require("cors");
@@ -49,7 +51,11 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
 app.get("/favicon.ico", (req, res) => res.status(204));
 app.get("/", (req, res) => res.status(204).send('Welcome to LMS API'));
-
+app.post(
+  "/webhook-checkout",
+  bodyParser.raw({ type: "application/json" }),
+  enrollmentController.webhookCheckout
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/v1/users", userRouter);
