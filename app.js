@@ -8,6 +8,7 @@ const userRouter = require("./routes/user.routes");
 const courseRouter = require("./routes/course.routes");
 const couponRouter = require("./routes/coupon.routes");
 const enrollRouter = require("./routes/enrollment.routes");
+const lessonRouter = require("./routes/lesson.routes");
 const paymentRouter = require("./routes/payment.routes");
 const enrollmentController = require("./controller/enrollment.controller");
 const session = require("express-session");
@@ -72,6 +73,7 @@ app.use("/api/v1/courses", courseRouter);
 app.use("/api/v1/coupons", couponRouter);
 app.use("/api/v1/enrollments", enrollRouter);
 app.use("/api/v1/payments", paymentRouter);
+app.use("/api/v1/lessons", lessonRouter);
 
 // Error handling for undefined routes
 app.all("*", (req, res, next) => {

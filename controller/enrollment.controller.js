@@ -134,7 +134,7 @@ const createEnrollmentCheckout = async (session) => {
         : "stripe",
       payment_date: new Date(),
     });
-    console.log(course.instructor._id, course._id, amount);
+    
     await InstructorEarning.create({
       instructor_id: course.instructor._id,
       course_id: course._id,
@@ -149,9 +149,9 @@ const createEnrollmentCheckout = async (session) => {
   }
 };
 exports.webhookCheckout = async (req, res, next) => {
-  console.log("Received webhook request");
+  
   const signature = req.headers["stripe-signature"];
-  console.log("Received webhook signature:", signature);
+  
   let event;
   try {
     event = stripe.webhooks.constructEvent(
@@ -161,11 +161,11 @@ exports.webhookCheckout = async (req, res, next) => {
   );
   }
   catch (err) {
-    console.log("Error constructing event:", err);
+    
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
   if(event.type === "checkout.session.completed"){
-    console.log("Payment was successful!");
+    
     await createEnrollmentCheckout(event.data.object);
   }
   res.status(200).json({ received: true });
