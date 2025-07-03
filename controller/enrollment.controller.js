@@ -35,7 +35,8 @@ exports.createEnrollment = catchAsync(async (req, res, next) => {
       expireDate: { $gt: new Date() },
     });
     if (coupon && (coupon.maxUses === 0 || coupon.usedCount < coupon.maxUses)) {
-      finalPrice = Math.max(0, course.price - coupon.discount);
+      //اعملها %
+      finalPrice = Math.max(0, course.price - (1-coupon.discount/100));
       // يمكنك هنا زيادة usedCount لو أردت
     }
   }

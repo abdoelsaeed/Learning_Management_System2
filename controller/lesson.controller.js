@@ -4,6 +4,7 @@ const catchAsync = require("../error/catchAsyn");
 const AppError = require("../error/err");
 const path = require('path');
 const Course = require('./../models/course.Model');
+const Enrollement = require('./../models/enrollment.Model')
 exports.createLesson = catchAsync(async (req, res, next) => {
     const {course_id, title, description, content_type, lesson_order} = req.body;
 
@@ -81,43 +82,105 @@ exports.createLesson = catchAsync(async (req, res, next) => {
 });
 
 exports.getLesson = catchAsync(async (req, res, next) => {
-    const {lessonId} = req.params;
-    const lesson = await Lesson.findById(lessonId).populate({path: "course_id", select: "title"});
-    if(!lesson){
-        return next(new AppError("Lesson not found", 404));
-    }
-    res.status(200).json({
-        status: "success",
-        data: {
-        lesson,
+  const { lessonId } = req.params;
+  const userId = req.user._id;
+
+  // جيب الدرس مع بيانات الكورس المرتبط
+  const lesson = await Lesson.findById(lessonId).populate({
+    path: "course_id",
+    select: "title",
+  });
+
+  if (!lesson) {
+    return next(new AppError("Lesson not found", 404));
+  }
+
+  const courseId = lesson.course_id._id;
+
+  // تحقق من وجود enrollment لهذا المستخدم في الكورس
+  const isEnrolled = await Enrollement.findOne({
+    user_id: userId,
+    course_id: courseId,
+  });
+
+  // لو مش مسجل، اعرض فقط العنوان وبعض التفاصيل العامة
+  if (!isEnrolled) {
+    return res.status(200).json({
+      status: "success",
+      data: {
+        lesson: {
+          _id: lesson._id,
+          title: lesson.title,
+          course_id: lesson.course_id,
+          preview: true, // ممكن تضيف علامة توضح إنه Preview فقط
         },
+      },
     });
+  }
+
+  // لو مسجل، اعرض كل التفاصيل
+  res.status(200).json({
+    status: "success",
+    data: {
+      lesson,
+    },
+  });
 });
 
+
 exports.getLessons = catchAsync(async (req, res, next) => {
-    const {courseId} = req.params;
-    const lessons = await Lesson.find({course_id: courseId}).populate({path: "course_id", select: "title"});
-    if(!lessons){
-        return next(new AppError("Lessons not found", 404));
-    }
-    res.status(200).json({
-        status: "success",
-        data: {
-        lessons,
-        },
+  const { courseId } = req.params;
+  const userId = req.user._id;
+
+  // تأكد من وجود الكورس (اختياري لكن مفيد)
+  const course = await Course.findById(courseId);
+  if (!course) {
+    return next(new AppError("Course not found", 404));
+  }
+
+  // تحقق من إذا كان المستخدم مسجل في الكورس
+  const isEnrolled = await Enrollement.findOne({
+    user_id: userId,
+    course_id: courseId,
+  });
+
+  let lessons;
+
+  if (isEnrolled) {
+    // لو مسجل، اعرض كل التفاصيل
+    lessons = await Lesson.find({ course_id: courseId }).populate({
+      path: "course_id",
+      select: "title",
     });
+  } else {
+    // لو مش مسجل، اعرض العناوين فقط
+    lessons = await Lesson.find({ course_id: courseId })
+      .select("title course_id") // عرض فقط العنوان والكورس
+      .populate({
+        path: "course_id",
+        select: "title",
+      });
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      lessons,
+    },
+  });
 });
+
 
 exports.deleteLesson = catchAsync(async (req, res, next) => {
     const {lessonId} = req.params;
     
     const lesson = await Lesson.findById(lessonId);
-    console.log(lesson);
+    
     if(!lesson){
         return next(new AppError("Lesson not found", 404));
     }
     const course = await Course.findById(lesson.course_id);
-    console.log(course);
+    
     if(!course){
         return next(new AppError("Course not found", 404));
     }

@@ -10,8 +10,8 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024, // 100MB limit
   },
 });
-router.get("/:lessonId", lessonController.getLesson);
-router.get("/courseId/:courseId", lessonController.getLessons);
+router.get("/:lessonId", authController.protect,lessonController.getLesson);
+router.get("/course/:courseId",authController.protect, lessonController.getLessons);
 
 router.use(authController.protect);
 router.use(authController.restricted("instructor"));
