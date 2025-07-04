@@ -12,6 +12,7 @@ const lessonRouter = require("./routes/lesson.routes");
 const paymentRouter = require("./routes/payment.routes");
 const liveSessionRouter = require('./routes/live_session.routes');
 const instructorEarningRouter = require("./routes/instructorEarning.routes");
+const questionRouter = require('./routes/question.routes')
 const quizRouter = require('./routes/quizzes.routes');
 const enrollmentController = require("./controller/enrollment.controller");
 const session = require("express-session");
@@ -80,6 +81,7 @@ app.use("/api/v1/lessons", lessonRouter);
 app.use("/api/v1/instructor-earnings",instructorEarningRouter);
 app.use("/api/v1/live-sessions",liveSessionRouter);
 app.use("/api/v1/quizzes", quizRouter);
+app.use("/api/v1/question", questionRouter);
 
 // Error handling for undefined routes
 app.all("*", (req, res, next) => {

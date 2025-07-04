@@ -1,3 +1,4 @@
+const Enrollement = require("../models/enrollment.Model");
 const catchAsync = require("./../error/catchAsyn");
 const AppError = require("./../error/err");
 const Payment = require("./../models/payment.Model");
@@ -66,7 +67,7 @@ exports.getEnrollmentsForInstructor = async (req, res, next) => {
   const courseIds = instructorCourses.map(c => c._id);
 
   // جيب التسجيلات في الكورسات دي
-  const enrollments = await Enrollment.find({ course: { $in: courseIds } })
+  const enrollments = await Enrollement.find({ course: { $in: courseIds } })
                                       .populate('user course');
 
   res.status(200).json({
