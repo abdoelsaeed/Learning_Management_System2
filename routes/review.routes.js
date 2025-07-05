@@ -12,4 +12,5 @@ router.get("/course/:courseId", reviewController.getAllReviews);
 router.get("/:reviewId", reviewController.getOneReview);
 router.delete("/:reviewId", authController.protect, reviewController.removeReview);
 router.patch("/:reviewId", authController.protect, reviewController.updateReview);
+router.get("/course/:courseId/average", reviewController.getCourseAverageRating);
 module.exports = router;

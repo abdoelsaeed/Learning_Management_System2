@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const catchAsync = require("../error/catchAsyn");
 const AppError = require("../error/err");
 const Course = require("../models/course.Model");
@@ -98,7 +99,7 @@ exports.updateReview = catchAsync(async (req, res, next) => {
         return next(new AppError("User not authenticated", 401));
     }
     const userId = req.user._id || req.user.id;
-    
+
     const review = await Review.findOne({ _id: reviewId, user_id: userId });
     if (!review) {
         return next(new AppError("Review not found or you are not authorized", 404));
@@ -117,3 +118,23 @@ exports.updateReview = catchAsync(async (req, res, next) => {
         data: { review }
     });
 });
+
+exports.getCourseAverageRating = catchAsync(async (req, res, next) => {
+    const { courseId } = req.params;
+    const stats = await Review.aggregate([
+        { $match: { course_id: new mongoose.Types.ObjectId(courseId) } },
+        {
+            $group:{
+                _id: "$course_id",
+                avgRating: { $avg: "$rating" },
+                numReviews: { $sum: 1 }
+            }
+        }
+    ]);
+
+    res.status(200).json({
+        status: "success",
+        data: stats.length > 0 ? stats[0] : { avgRating: 0, numReviews: 0 },
+    });
+});
+
