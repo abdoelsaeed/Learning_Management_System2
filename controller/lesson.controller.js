@@ -6,6 +6,7 @@ const path = require('path');
 const Course = require('./../models/course.Model');
 const Enrollement = require('./../models/enrollment.Model')
 const LessonProgress = require('./../models/lessonProgress.Model');
+const streamifier = require('streamifier');
 
 
 async function updateProgress(studentId, courseId) {
@@ -40,49 +41,60 @@ exports.createLesson = catchAsync(async (req, res, next) => {
     let cloudinary_result = null;
     let content_url = '';
 
+    // رفع الملف إلى Cloudinary من buffer
+    const streamUpload = (buffer, options) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+          if (result) resolve(result);
+          else reject(error);
+        });
+        streamifier.createReadStream(buffer).pipe(stream);
+      });
+    };
+
     switch (content_type) {
         case "video":
             public_id = `lessons/videos/${file_name}_${timestamp}`;
-            cloudinary_result = await cloudinary.uploader.upload(req.file.path, {
-            resource_type: "video",
-            public_id: public_id,
-            format: file_extension,
-            allowed_formats: ["mp4", "avi", "mov", "mkv", "webm"],
-            transformation: [{ width: 1280, height: 720, crop: "scale" }],
+            cloudinary_result = await streamUpload(req.file.buffer, {
+              resource_type: "video",
+              public_id: public_id,
+              format: file_extension,
+              allowed_formats: ["mp4", "avi", "mov", "mkv", "webm"],
+              transformation: [{ width: 1280, height: 720, crop: "scale" }],
             });
             break;
         case "pdf":
             public_id = `lessons/pdfs/${file_name}_${timestamp}`;
-            cloudinary_result = await cloudinary.uploader.upload(req.file.path, {
-            resource_type: "raw",
-            public_id: public_id,
-            format: file_extension,
-            allowed_formats: ["pdf"],
+            cloudinary_result = await streamUpload(req.file.buffer, {
+              resource_type: "raw",
+              public_id: public_id,
+              format: file_extension,
+              allowed_formats: ["pdf"],
             });
             content_url = `${cloudinary_result.secure_url}.${file_extension}?_a=application/pdf`;
             break;
         case "image":
             public_id = `lessons/images/${file_name}_${timestamp}`;
-            cloudinary_result = await cloudinary.uploader.upload(req.file.path, {
-            public_id: public_id,
-            format: file_extension,
-            allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
-            transformation: [{ width: 1200, height: 800, crop: "scale" }],
+            cloudinary_result = await streamUpload(req.file.buffer, {
+              public_id: public_id,
+              format: file_extension,
+              allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+              transformation: [{ width: 1200, height: 800, crop: "scale" }],
             });
             break;
         case "audio":
             public_id = `lessons/audio/${file_name}_${timestamp}`;
-            cloudinary_result = await cloudinary.uploader.upload(req.file.path, {
-            resource_type: "video", // Cloudinary يعامل الصوت كفيديو
-            public_id: public_id,
-            format: file_extension,
-            allowed_formats: ["mp3", "wav", "ogg", "m4a"],
+            cloudinary_result = await streamUpload(req.file.buffer, {
+              resource_type: "video",
+              public_id: public_id,
+              format: file_extension,
+              allowed_formats: ["mp3", "wav", "ogg", "m4a"],
             });
             break;
         default:
             return next(new AppError("Invalid content type", 400));
-        }
-    content_url = cloudinary_result.secure_url;
+    }
+    if (!content_url) content_url = cloudinary_result.secure_url;
 
     const lesson = await Lesson.create({
         title,
@@ -252,42 +264,48 @@ exports.updateLesson = catchAsync(async (req, res, next) => {
         });
         }
 
-        // رفع الملف الجديد
+        // رفع الملف الجديد إلى Cloudinary من buffer
+        const streamUpload = (buffer, options) => {
+          return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+              if (result) resolve(result);
+              else reject(error);
+            });
+            streamifier.createReadStream(buffer).pipe(stream);
+          });
+        };
+
         let cloudinary_result = null;
 
         switch (new_content_type) {
         case "video":
-            cloudinary_result = await cloudinary.uploader.upload(req.file.path, {
-            resource_type: "video",
-            folder: "lessons/videos",
-            allowed_formats: ["mp4", "avi", "mov", "mkv", "webm"],
+            cloudinary_result = await streamUpload(req.file.buffer, {
+              resource_type: "video",
+              folder: "lessons/videos",
+              allowed_formats: ["mp4", "avi", "mov", "mkv", "webm"],
             });
             break;
-
         case "pdf":
-            cloudinary_result = await cloudinary.uploader.upload(req.file.path, {
-            resource_type: "raw",
-            folder: "lessons/pdfs",
-            allowed_formats: ["pdf"],
+            cloudinary_result = await streamUpload(req.file.buffer, {
+              resource_type: "raw",
+              folder: "lessons/pdfs",
+              allowed_formats: ["pdf"],
             });
             break;
-
         case "image":
-            cloudinary_result = await cloudinary.uploader.upload(req.file.path, {
-            folder: "lessons/images",
-            allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+            cloudinary_result = await streamUpload(req.file.buffer, {
+              folder: "lessons/images",
+              allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
             });
             break;
-
         case "audio":
-            cloudinary_result = await cloudinary.uploader.upload(req.file.path, {
-            resource_type: "video",
-            folder: "lessons/audio",
-            allowed_formats: ["mp3", "wav", "ogg", "m4a"],
+            cloudinary_result = await streamUpload(req.file.buffer, {
+              resource_type: "video",
+              folder: "lessons/audio",
+              allowed_formats: ["mp3", "wav", "ogg", "m4a"],
             });
             break;
         }
-
         req.body.content_url = cloudinary_result.secure_url;
     }
 

@@ -5,7 +5,7 @@ const lessonController = require("./../controller/lesson.controller");
 const router = express.Router();
 
 const upload = multer({
-  dest: "uploads/",
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB limit
   },
