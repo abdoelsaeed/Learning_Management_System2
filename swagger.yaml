@@ -28,6 +28,8 @@ tags:
     description: Review management endpoints
   - name: Assignments
     description: Assignment management endpoints
+  - name: Submissions
+    description: Submission management endpoints
 servers:
   - url: https://learning-management-system-lms-theta.vercel.app/api/v1
     description: Production server (Vercel)
@@ -1756,6 +1758,262 @@ paths:
           description: Forbidden
         '404':
           description: Assignment not found
+  /submission/assignment/{assignmentId}:
+    post:
+      tags:
+        - Submissions
+      summary: Create a new assignment submission (student only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          schema:
+            type: string
+          required: true
+          description: Assignment ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_url:
+                  type: string
+                  description: URL to the submitted file/document
+              required:
+                - submission_url
+      responses:
+        '201':
+          description: Submission created successfully
+        '400':
+          description: Bad request (assignment closed, due date passed, already submitted)
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (not enrolled in course)
+        '404':
+          description: Assignment not found
+    get:
+      tags:
+        - Submissions
+      summary: Get all submissions for an assignment (instructor sees all, student sees own)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          schema:
+            type: string
+          required: true
+          description: Assignment ID
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of results per page
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          description: Sort order (e.g. -createdAt, grade)
+        - in: query
+          name: graded
+          schema:
+            type: string
+            enum: ["true"]
+          required: false
+          description: Filter for graded submissions only
+        - in: query
+          name: ungraded
+          schema:
+            type: string
+            enum: ["true"]
+          required: false
+          description: Filter for ungraded submissions only
+        - in: query
+          name: search
+          schema:
+            type: string
+          required: false
+          description: Search in feedback (instructors only)
+      responses:
+        '200':
+          description: List of submissions
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Assignment not found
+  /submission/{submissionId}:
+    get:
+      tags:
+        - Submissions
+      summary: Get a specific submission by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: submissionId
+          schema:
+            type: string
+          required: true
+          description: Submission ID
+      responses:
+        '200':
+          description: Submission found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Submission not found
+    patch:
+      tags:
+        - Submissions
+      summary: Update a submission (student: url only, instructor: grade/feedback)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: submissionId
+          schema:
+            type: string
+          required: true
+          description: Submission ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submission_url:
+                  type: string
+                grade:
+                  type: number
+                feedback:
+                  type: string
+      responses:
+        '200':
+          description: Submission updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Submission not found
+    delete:
+      tags:
+        - Submissions
+      summary: Delete a submission (student: own, instructor: own assignment)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: submissionId
+          schema:
+            type: string
+          required: true
+          description: Submission ID
+      responses:
+        '204':
+          description: Submission deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Submission not found
+  /submission/getmysubmission/assignment/{assignmentId}:
+    get:
+      tags:
+        - Submissions
+      summary: Get current student's submission for a specific assignment
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          schema:
+            type: string
+          required: true
+          description: Assignment ID
+      responses:
+        '200':
+          description: Student's submission (or null)
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Assignment not found
+  /submission/get/my-submissions:
+    get:
+      tags:
+        - Submissions
+      summary: Get all submissions for the current student
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of results per page
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          description: Sort order (e.g. -createdAt, grade)
+        - in: query
+          name: graded
+          schema:
+            type: string
+            enum: ["true"]
+          required: false
+          description: Filter for graded submissions only
+        - in: query
+          name: ungraded
+          schema:
+            type: string
+            enum: ["true"]
+          required: false
+          description: Filter for ungraded submissions only
+        - in: query
+          name: assignmentId
+          schema:
+            type: string
+          required: false
+          description: Filter by assignment ID
+      responses:
+        '200':
+          description: List of student's submissions
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
 components:
   securitySchemes:
     bearerAuth:
