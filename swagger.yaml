@@ -10,6 +10,24 @@ tags:
     description: Courses management endpoints
   - name: Enrollments
     description: Enrollment management endpoints
+  - name: Coupons
+    description: Coupon management endpoints
+  - name: Instructor Earnings
+    description: Instructor earnings management endpoints
+  - name: Payments
+    description: Payments management endpoints
+  - name: Lessons
+    description: Lesson management endpoints
+  - name: Live Sessions
+    description: Live session management endpoints
+  - name: Quizzes
+    description: Quiz management endpoints
+  - name: Questions
+    description: Question management endpoints
+  - name: Reviews
+    description: Review management endpoints
+  - name: Assignments
+    description: Assignment management endpoints
 servers:
   - url: https://learning-management-system-lms-theta.vercel.app/api/v1
     description: Production server (Vercel)
@@ -155,6 +173,44 @@ paths:
           description: Password reset successful
         '400':
           description: Invalid or expired code
+  /users/generate-2fa:
+    post:
+      tags:
+        - Auth
+      summary: Generate two-factor authentication secret
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 2FA secret generated and QR code returned
+        '401':
+          description: Unauthorized
+  /users/verify-2fa:
+    post:
+      tags:
+        - Auth
+      summary: Verify two-factor authentication token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The 2FA token from the authenticator app
+                userId:
+                  type: string
+                  description: The user's ID
+              required:
+                - token
+                - userId
+      responses:
+        '200':
+          description: 2FA token is valid, JWT returned
+        '400':
+          description: Invalid 2FA token or user
   /users/logout:
     get:
       tags:
@@ -163,6 +219,8 @@ paths:
       responses:
         '200':
           description: Logout successful
+        '401':
+          description: Not logged in
   /users/facebook:
     get:
       tags:
@@ -200,13 +258,6 @@ paths:
         '401':
           description: Google login failed
   /courses:
-    get:
-      tags:
-        - Courses
-      summary: Get all courses
-      responses:
-        '200':
-          description: List all courses
     post:
       tags:
         - Courses
@@ -226,13 +277,10 @@ paths:
                   type: string
                 price:
                   type: number
-                instructorId:
-                  type: integer
               required:
                 - title
                 - description
                 - price
-                - instructorId
       responses:
         '201':
           description: Course created
@@ -240,40 +288,78 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
-  /courses/foradmin:
     get:
       tags:
         - Courses
-      summary: Get all courses for admin (including drafts, pending, etc.)
-      security:
-        - bearerAuth: []
+      summary: Get all courses
       parameters:
         - in: query
-          name: status
+          name: keyword
           schema:
             type: string
-            enum: [approved, draft, pending, rejected, archived]
           required: false
-          description: Filter courses by status (e.g., approved, draft, pending, rejected, archived)
+          description: Search keyword for title or description
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of results per page
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          description: Sort by fields (e.g. price,-createdAt)
+        - in: query
+          name: fields
+          schema:
+            type: string
+          required: false
+          description: Select specific fields (e.g. title,price)
+        - in: query
+          name: instructorName
+          schema:
+            type: string
+          required: false
+          description: Filter by instructor name
       responses:
         '200':
-          description: List of all courses for admin
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
+          description: List all courses
   /courses/{id}:
+    get:
+      tags:
+        - Courses
+      summary: Get a course by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: Course found
+        '404':
+          description: Course not found
     patch:
       tags:
         - Courses
-      summary: Update a course
+      summary: Update a course (instructor only)
       security:
         - bearerAuth: []
       parameters:
         - in: path
           name: id
           schema:
-            type: integer
+            type: string
           required: true
           description: Course ID
       requestBody:
@@ -289,6 +375,9 @@ paths:
                   type: string
                 price:
                   type: number
+                status:
+                  type: string
+                  enum: [draft, pending]
       responses:
         '200':
           description: Course updated
@@ -298,36 +387,86 @@ paths:
           description: Forbidden
         '404':
           description: Course not found
-    get:
+    delete:
       tags:
         - Courses
-      summary: Get a course by ID
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-          description: Course ID
-      responses:
-        '200':
-          description: Course found
-        '404':
-          description: Course not found
-  /courses/{id}/foradmin:
-    get:
-      tags:
-        - Courses
-      summary: Get course by ID (admin only, any status)
-      description: Returns course details for admins regardless of status. Requires admin authentication.
+      summary: Delete a course (instructor only)
       security:
         - bearerAuth: []
       parameters:
         - in: path
           name: id
-          required: true
           schema:
-            type: integer
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '204':
+          description: Course deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Course not found
+  /courses/{id}/forinstructor:
+    get:
+      tags:
+        - Courses
+      summary: Get a course by ID (instructor only, including drafts)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: Course found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Course not found
+  /courses/foradmin:
+    get:
+      tags:
+        - Courses
+      summary: Get all courses for admin (all statuses)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [approved, draft, pending, published, rejected, archived]
+          required: false
+          description: Filter courses by status
+      responses:
+        '200':
+          description: List of all courses for admin
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /courses/{id}/foradmin:
+    get:
+      tags:
+        - Courses
+      summary: Get course by ID (admin only, any status)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
           description: Course ID
       responses:
         '200':
@@ -338,6 +477,60 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden (if not admin)
+    patch:
+      tags:
+        - Courses
+      summary: Update a course (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [draft, pending, published, rejected, archived]
+      responses:
+        '200':
+          description: Course updated
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Course not found
+    delete:
+      tags:
+        - Courses
+      summary: Delete a course (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: Course status set to rejected by admin
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Course not found
   /enrollments/{courseId}:
     post:
       tags:
@@ -349,18 +542,1220 @@ paths:
         - in: path
           name: courseId
           schema:
-            type: integer
+            type: string
           required: true
           description: ID of the course to enroll in
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                couponCode:
+                  type: string
+                  description: Optional coupon code
       responses:
         '200':
-          description: Enrollment created successfully
+          description: Enrollment created successfully (free course or Stripe session URL)
         '400':
-          description: Bad request (e.g., missing courseId, user already enrolled)
+          description: Bad request (e.g., already enrolled, missing courseId)
         '401':
           description: Unauthorized
         '404':
           description: Course not found
+    get:
+      tags:
+        - Enrollments
+      summary: Get all enrollments for a course (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: ID of the course
+      responses:
+        '200':
+          description: List of enrollments for the course
+        '400':
+          description: Bad request (missing courseId)
+        '401':
+          description: Unauthorized
+        '404':
+          description: No enrollments found for this course
+  /enrollments/admin:
+    get:
+      tags:
+        - Enrollments
+      summary: Get all enrollments (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all enrollments
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /enrollments/{userId}:
+    get:
+      tags:
+        - Enrollments
+      summary: Get all enrollments for a user (instructor only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+          required: true
+          description: ID of the user
+      responses:
+        '200':
+          description: List of enrollments for the user
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /enrollments/me:
+    get:
+      tags:
+        - Enrollments
+      summary: Get all enrollments for the current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of enrollments for the current user
+        '401':
+          description: Unauthorized
+  /coupons:
+    post:
+      tags:
+        - Coupons
+      summary: Create a new coupon (instructor or admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                discount:
+                  type: number
+                expireDate:
+                  type: string
+                  format: date-time
+                maxUses:
+                  type: integer
+              required:
+                - code
+                - discount
+                - expireDate
+      responses:
+        '201':
+          description: Coupon created
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    get:
+      tags:
+        - Coupons
+      summary: Get all coupons (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all coupons
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /coupons/apply:
+    post:
+      tags:
+        - Coupons
+      summary: Apply a coupon to a course
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                couponCode:
+                  type: string
+                courseId:
+                  type: string
+              required:
+                - couponCode
+                - courseId
+      responses:
+        '200':
+          description: Coupon applied successfully
+        '400':
+          description: Invalid coupon or course
+        '401':
+          description: Unauthorized
+  /coupons/{id}:
+    get:
+      tags:
+        - Coupons
+      summary: Get a coupon by ID (instructor or admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Coupon ID
+      responses:
+        '200':
+          description: Coupon found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Coupon not found
+    patch:
+      tags:
+        - Coupons
+      summary: Update a coupon (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Coupon ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                discount:
+                  type: number
+                expireDate:
+                  type: string
+                  format: date-time
+                maxUses:
+                  type: integer
+      responses:
+        '200':
+          description: Coupon updated
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Coupon not found
+    delete:
+      tags:
+        - Coupons
+      summary: Delete a coupon (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Coupon ID
+      responses:
+        '204':
+          description: Coupon deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Coupon not found
+  /instructor-earnings:
+    get:
+      tags:
+        - Instructor Earnings
+      summary: Get all earnings for the current instructor
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all earnings for the instructor
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /instructor-earnings/{courseId}:
+    get:
+      tags:
+        - Instructor Earnings
+      summary: Get all earnings for the current instructor for a specific course
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: List of earnings for the instructor for the course
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /instructor-earnings/course/{courseId}/instructor/{instructorId}:
+    get:
+      tags:
+        - Instructor Earnings
+      summary: Get all earnings for a specific instructor for a specific course (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+        - in: path
+          name: instructorId
+          schema:
+            type: string
+          required: true
+          description: Instructor ID
+      responses:
+        '200':
+          description: List of earnings for the instructor for the course
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /payments:
+    get:
+      tags:
+        - Payments
+      summary: Get all payments (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of results per page
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          description: Sort by fields (e.g. -createdAt)
+        - in: query
+          name: fields
+          schema:
+            type: string
+          required: false
+          description: Select specific fields (e.g. course_id,price)
+      responses:
+        '200':
+          description: List of all payments
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /lessons/{lessonId}:
+    get:
+      tags:
+        - Lessons
+      summary: Get a lesson by ID (student/instructor)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: lessonId
+          schema:
+            type: string
+          required: true
+          description: Lesson ID
+      responses:
+        '200':
+          description: Lesson found
+        '401':
+          description: Unauthorized
+        '404':
+          description: Lesson not found
+    delete:
+      tags:
+        - Lessons
+      summary: Delete a lesson (instructor only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: lessonId
+          schema:
+            type: string
+          required: true
+          description: Lesson ID
+      responses:
+        '204':
+          description: Lesson deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Lesson not found
+    patch:
+      tags:
+        - Lessons
+      summary: Update a lesson (instructor only, supports file upload)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: lessonId
+          schema:
+            type: string
+          required: true
+          description: Lesson ID
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                content_type:
+                  type: string
+                  enum: [video, pdf, image, audio]
+                content_url:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Lesson updated
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Lesson not found
+  /lessons/course/{courseId}:
+    get:
+      tags:
+        - Lessons
+      summary: Get all lessons for a course (student/instructor)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: List of lessons for the course
+        '401':
+          description: Unauthorized
+        '404':
+          description: Course not found
+  /lessons:
+    post:
+      tags:
+        - Lessons
+      summary: Create a new lesson (instructor only, supports file upload)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                course_id:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                content_type:
+                  type: string
+                  enum: [video, pdf, image, audio]
+                content_url:
+                  type: string
+                  format: binary
+                lesson_order:
+                  type: integer
+              required:
+                - course_id
+                - title
+                - content_type
+                - content_url
+      responses:
+        '201':
+          description: Lesson created
+        '400':
+          description: Bad request (e.g., missing file)
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /live-sessions:
+    post:
+      tags:
+        - Live Sessions
+      summary: Create a new live session (instructor only, creates Zoom meeting)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                course_id:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                duration_minutes:
+                  type: integer
+                scheduled_at:
+                  type: string
+                  format: date-time
+                password:
+                  type: string
+              required:
+                - course_id
+                - title
+                - duration_minutes
+      responses:
+        '201':
+          description: Live session created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Failed to create live session
+  /live-sessions/{courseId}:
+    get:
+      tags:
+        - Live Sessions
+      summary: Get all live sessions for a course (student/instructor)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+        - in: query
+          name: upcoming
+          schema:
+            type: boolean
+          required: false
+          description: Filter for upcoming sessions only
+      responses:
+        '200':
+          description: List of live sessions for the course
+        '401':
+          description: Unauthorized
+        '404':
+          description: Course not found
+  /quizzes:
+    post:
+      tags:
+        - Quizzes
+      summary: Create a new quiz (instructor only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                course_id:
+                  type: string
+                title:
+                  type: string
+                time_limit:
+                  type: integer
+              required:
+                - course_id
+                - title
+                - time_limit
+      responses:
+        '201':
+          description: Quiz created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    get:
+      tags:
+        - Quizzes
+      summary: Get all quizzes (with filtering & pagination)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: course_id
+          schema:
+            type: string
+          required: true
+          description: Course ID to filter quizzes
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of results per page
+      responses:
+        '200':
+          description: List of quizzes
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /quizzes/{id}:
+    get:
+      tags:
+        - Quizzes
+      summary: Get a quiz by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Quiz ID
+      responses:
+        '200':
+          description: Quiz found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Quiz not found
+    patch:
+      tags:
+        - Quizzes
+      summary: Update a quiz by ID (instructor only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Quiz ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                time_limit:
+                  type: integer
+      responses:
+        '200':
+          description: Quiz updated
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Quiz not found
+    delete:
+      tags:
+        - Quizzes
+      summary: Delete a quiz by ID (instructor or admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Quiz ID
+      responses:
+        '204':
+          description: Quiz deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Quiz not found
+  /questions:
+    post:
+      tags:
+        - Questions
+      summary: Create a new question (instructor only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quiz_id:
+                  type: string
+                question_text:
+                  type: string
+                question_type:
+                  type: string
+                  enum: [multiple_choice, true_false, short_answer]
+                options:
+                  type: array
+                  items:
+                    type: string
+                correct_answer:
+                  type: string
+              required:
+                - quiz_id
+                - question_text
+                - question_type
+      responses:
+        '200':
+          description: Question created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /questions/quizId/{quizId}:
+    get:
+      tags:
+        - Questions
+      summary: Get all questions for a quiz (student/instructor)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: quizId
+          schema:
+            type: string
+          required: true
+          description: Quiz ID
+        - in: query
+          name: question_type
+          schema:
+            type: string
+            enum: [multiple_choice, true_false, short_answer]
+          required: false
+          description: Filter by question type
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of results per page
+      responses:
+        '200':
+          description: List of questions for the quiz
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Quiz not found
+  /questions/{questionId}:
+    get:
+      tags:
+        - Questions
+      summary: Get a question by ID (student/instructor)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: questionId
+          schema:
+            type: string
+          required: true
+          description: Question ID
+      responses:
+        '200':
+          description: Question found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Question not found
+    patch:
+      tags:
+        - Questions
+      summary: Update a question by ID (instructor only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: questionId
+          schema:
+            type: string
+          required: true
+          description: Question ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question_text:
+                  type: string
+                question_type:
+                  type: string
+                  enum: [multiple_choice, true_false, short_answer]
+                options:
+                  type: array
+                  items:
+                    type: string
+                correct_answer:
+                  type: string
+      responses:
+        '200':
+          description: Question updated
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Question not found
+    delete:
+      tags:
+        - Questions
+      summary: Delete a question by ID (instructor only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: questionId
+          schema:
+            type: string
+          required: true
+          description: Question ID
+      responses:
+        '204':
+          description: Question deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Question not found
+  /review/course/{courseId}:
+    post:
+      tags:
+        - Reviews
+      summary: Create a new review for a course (student only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                rating:
+                  type: integer
+              required:
+                - rating
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: Review created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    get:
+      tags:
+        - Reviews
+      summary: Get all reviews for a course
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of results per page
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          description: Sort order (e.g. -createdAt)
+      responses:
+        '200':
+          description: List of reviews for the course
+        '400':
+          description: Bad request
+        '404':
+          description: Course not found
+  /review/course/{courseId}/average:
+    get:
+      tags:
+        - Reviews
+      summary: Get average rating and number of reviews for a course
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: Average rating and number of reviews
+        '400':
+          description: Bad request
+        '404':
+          description: Course not found
+  /review/{reviewId}:
+    get:
+      tags:
+        - Reviews
+      summary: Get a review by ID
+      parameters:
+        - in: path
+          name: reviewId
+          schema:
+            type: string
+          required: true
+          description: Review ID
+      responses:
+        '200':
+          description: Review found
+        '404':
+          description: Review not found
+    delete:
+      tags:
+        - Reviews
+      summary: Delete a review (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: reviewId
+          schema:
+            type: string
+          required: true
+          description: Review ID
+      responses:
+        '200':
+          description: Review deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Review not found
+    patch:
+      tags:
+        - Reviews
+      summary: Update a review (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: reviewId
+          schema:
+            type: string
+          required: true
+          description: Review ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                rating:
+                  type: integer
+      responses:
+        '200':
+          description: Review updated
+        '401':
+          description: Unauthorized
+        '404':
+          description: Review not found
+  /assignments/course/{courseId}:
+    post:
+      tags:
+        - Assignments
+      summary: Create a new assignment for a course (instructor only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                max_points:
+                  type: number
+                due_date:
+                  type: string
+                  format: date-time
+              required:
+                - title
+                - max_points
+                - due_date
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: Assignment created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    get:
+      tags:
+        - Assignments
+      summary: Get all assignments for a course (instructor sees all, student sees only active)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Number of results per page
+      responses:
+        '200':
+          description: List of assignments for the course
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /assignments/{assignmentId}/course/{courseId}:
+    get:
+      tags:
+        - Assignments
+      summary: Get one assignment by ID (instructor sees all, student sees only active)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          schema:
+            type: string
+          required: true
+          description: Assignment ID
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: Assignment found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Assignment not found
+    patch:
+      tags:
+        - Assignments
+      summary: Update an assignment by ID (instructor only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          schema:
+            type: string
+          required: true
+          description: Assignment ID
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                max_points:
+                  type: number
+                due_date:
+                  type: string
+                  format: date-time
+                status:
+                  type: string
+                  enum: [active, closed]
+      responses:
+        '200':
+          description: Assignment updated
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Assignment not found
+    delete:
+      tags:
+        - Assignments
+      summary: Delete an assignment by ID (instructor only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          schema:
+            type: string
+          required: true
+          description: Assignment ID
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '204':
+          description: Assignment deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Assignment not found
 components:
   securitySchemes:
     bearerAuth:

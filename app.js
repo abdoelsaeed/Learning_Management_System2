@@ -12,7 +12,8 @@ const lessonRouter = require("./routes/lesson.routes");
 const paymentRouter = require("./routes/payment.routes");
 const liveSessionRouter = require('./routes/live_session.routes');
 const instructorEarningRouter = require("./routes/instructorEarning.routes");
-const questionRouter = require('./routes/question.routes')
+const questionRouter = require('./routes/question.routes');
+const assignmentRouter = require('./routes/assignment.routes');
 const quizRouter = require('./routes/quizzes.routes');
 const enrollmentController = require("./controller/enrollment.controller");
 const reviewRouter = require('./routes/review.routes');
@@ -26,9 +27,8 @@ const passport = require("./utils/passport");
 const globalErrorHandler = require("./controller/error.controller");
 const swaggerUi = require("swagger-ui-express");
 const fs = require("fs");
-const swaggerDocument = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "public", "swagger.json"), "utf8")
-);
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
 
 const app = express();
 
@@ -84,12 +84,14 @@ app.use("/api/v1/live-sessions",liveSessionRouter);
 app.use("/api/v1/quizzes", quizRouter);
 app.use("/api/v1/question", questionRouter);
 app.use("/api/v1/review", reviewRouter);
+app.use("/api/v1/assignment", assignmentRouter);
 
 
 // Error handling for undefined routes
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });
+
 
 app.use(globalErrorHandler);
 
