@@ -1,7 +1,7 @@
 
 const express = require("express");
 const router = express.Router();
-const quizzesController = require("../controller/Quizzes.controller");
+const quizzesController = require("../controller/quizzes.controller");
 const authController = require("./../controller/Auth.controller");
 
 // Create a quiz
