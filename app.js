@@ -34,14 +34,14 @@ const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
 const app = express();
 
 // CORS للسماح بطلبات من أي مصدر
-app.use(
-  cors({
-    origin: "*",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "stripe-signature"], // إضافة stripe-signature
-  })
-);
+  app.use(
+    cors({
+      origin: "http://localhost:5173", // أو الدومين بتاع الفرونت
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "stripe-signature"],
+    })
+  );
 
 // Webhook endpoint *قبل* أي middlewares بتعدّل الـ body
 app.post(
