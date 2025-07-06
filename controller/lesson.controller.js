@@ -5,6 +5,27 @@ const AppError = require("../error/err");
 const path = require('path');
 const Course = require('./../models/course.Model');
 const Enrollement = require('./../models/enrollment.Model')
+const LessonProgress = require('./../models/lessonProgress.Model');
+
+
+async function updateProgress(studentId, courseId) {
+  const totalLessons = await Lesson.countDocuments({ course_id: courseId });
+  const completedLessons = await LessonProgress.countDocuments({
+    student: studentId,
+    course: courseId,
+    completed: true,
+  });
+  const progress =
+    totalLessons === 0
+      ? 0
+      : Math.round((completedLessons / totalLessons) * 100);
+
+  await Enrollement.findOneAndUpdate(
+    { user_id: studentId, course_id: courseId },
+    { progress }
+  );
+}
+
 exports.createLesson = catchAsync(async (req, res, next) => {
     const {course_id, title, description, content_type, lesson_order} = req.body;
 
@@ -118,11 +139,21 @@ exports.getLesson = catchAsync(async (req, res, next) => {
     });
   }
 
+  // --------- حساب progress ---------
+  const totalLessons = await Lesson.countDocuments({ course_id: courseId });
+  const completedLessons = await LessonProgress.countDocuments({
+    student: userId,
+    course: courseId,
+    completed: true,
+  });
+  const progress =totalLessons === 0? 0: Math.round((completedLessons / totalLessons) * 100);
+  
   // لو مسجل، اعرض كل التفاصيل
   res.status(200).json({
     status: "success",
     data: {
       lesson,
+      progress,
     },
   });
 });
@@ -273,6 +304,38 @@ exports.updateLesson = catchAsync(async (req, res, next) => {
         },
     });
 });
+
+exports.markLessonAsComplete = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const { lessonId } = req.params;
+
+  // جيب الدرس وتأكد من وجوده
+  const lesson = await Lesson.findById(lessonId);
+  if (!lesson) return next(new AppError("Lesson not found", 404));
+  
+  // تأكد أن الطالب مسجل في الكورس
+  const enrollment = await Enrollement.findOne({
+    user_id: userId,
+    course_id: lesson.course_id,
+  });
+  if (!enrollment)
+    return next(new AppError("You are not enrolled in this course", 403));
+
+  // سجل التقدم (لو موجود حدثه، لو مش موجود أنشئه)
+  await LessonProgress.findOneAndUpdate(
+    { student: userId, course: lesson.course_id, lesson: lessonId },
+    { completed: true, completedAt: new Date() },
+    { upsert: true, new: true }
+  );
+
+  // --هنا استدعي تحديث progress--
+  await updateProgress(userId, lesson.course_id);
+
+  res
+    .status(200)
+    .json({ status: "success", message: "Lesson marked as complete" });
+});
+
 
 
 

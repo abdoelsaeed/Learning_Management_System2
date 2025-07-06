@@ -6,6 +6,9 @@ const Payment = require("./../models/payment.Model");
 const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY);
 const Coupon = require('./../models/coupon.Model');
 const InstructorEarning = require('./../models/instructor_earnings.Model');
+const LessonProgress = require("../models/lessonProgress.Model");
+
+
 
 
 exports.createEnrollment = catchAsync(async (req, res, next) => {

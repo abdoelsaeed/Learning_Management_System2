@@ -2,6 +2,11 @@ const express = require("express");
 const router = express.Router();
 const enrollController = require("./../controller/enrollment.controller");
 const authController = require('./../controller/Auth.controller');
+router.get(
+  "/me",
+  authController.protect,
+  enrollController.getMyEnrollment
+);
 router.post('/:courseId',
   authController.protect,
   enrollController.createEnrollment
@@ -20,10 +25,5 @@ router.get('/:userId',
   authController.protect,
   authController.restricted("instructor"),
   enrollController.getAllEnrollmentsForAdmin
-);
-router.get(
-  "/:me",
-  authController.protect,
-  enrollController.getMyEnrollment
 );
 module.exports = router;

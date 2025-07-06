@@ -10,6 +10,11 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024, // 100MB limit
   },
 });
+router.post(
+  "/:lessonId/complete",
+  authController.protect,
+  lessonController.markLessonAsComplete
+);
 router.get("/:lessonId", authController.protect,lessonController.getLesson);
 router.get("/course/:courseId",authController.protect, lessonController.getLessons);
 
@@ -23,4 +28,6 @@ router.patch(
   upload.single("content_url"),
   lessonController.updateLesson
 );
+
+
 module.exports = router;

@@ -2020,3 +2020,384 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: User ID
+        name:
+          type: string
+        email:
+          type: string
+        photo:
+          type: string
+          example: default.jpg
+        role:
+          type: string
+          enum: [student, admin, instructor]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - name
+        - email
+        - role
+        - active
+    Course:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        language:
+          type: string
+          enum: [English, Arabic, French, Spanish, German, Other]
+        status:
+          type: string
+          enum: [draft, pending, published, rejected, archived]
+        instructor:
+          $ref: '#/components/schemas/User'
+        prerequisites:
+          type: array
+          items:
+            type: string
+        whatYouWillLearn:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - title
+        - price
+        - language
+        - status
+    Enrollment:
+      type: object
+      properties:
+        _id:
+          type: string
+        user_id:
+          $ref: '#/components/schemas/User'
+        course_id:
+          $ref: '#/components/schemas/Course'
+        progress:
+          type: number
+        completed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - course_id
+    Payment:
+      type: object
+      properties:
+        _id:
+          type: string
+        student_id:
+          $ref: '#/components/schemas/User'
+        course_id:
+          $ref: '#/components/schemas/Course'
+        sessionId:
+          type: string
+        price:
+          type: number
+        payment_method:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - student_id
+        - course_id
+        - sessionId
+        - payment_method
+    InstructorEarnings:
+      type: object
+      properties:
+        _id:
+          type: string
+        instructor_id:
+          $ref: '#/components/schemas/User'
+        course_id:
+          $ref: '#/components/schemas/Course'
+        amount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - instructor_id
+        - course_id
+        - amount
+    Lesson:
+      type: object
+      properties:
+        _id:
+          type: string
+        course_id:
+          $ref: '#/components/schemas/Course'
+        title:
+          type: string
+        description:
+          type: string
+        content_type:
+          type: string
+          enum: [video, pdf, text, audio, other]
+        content_url:
+          type: string
+        lesson_order:
+          type: number
+        file_extension:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - course_id
+        - title
+        - content_type
+        - content_url
+        - lesson_order
+        - file_extension
+    LiveSession:
+      type: object
+      properties:
+        _id:
+          type: string
+        course_id:
+          $ref: '#/components/schemas/Course'
+        instructor_id:
+          $ref: '#/components/schemas/User'
+        title:
+          type: string
+        description:
+          type: string
+        session_link:
+          type: string
+        scheduled_at:
+          type: string
+          format: date-time
+        duration_minutes:
+          type: number
+        password_Session:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - course_id
+        - instructor_id
+        - title
+        - session_link
+        - scheduled_at
+    Question:
+      type: object
+      properties:
+        _id:
+          type: string
+        quiz_id:
+          $ref: '#/components/schemas/Quiz'
+        question_text:
+          type: string
+        question_type:
+          type: string
+          enum: [multiple_choice, true_false, short_answer]
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              isCorrect:
+                type: boolean
+        correct_answer:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - quiz_id
+        - question_text
+        - question_type
+    Quiz:
+      type: object
+      properties:
+        _id:
+          type: string
+        course_id:
+          $ref: '#/components/schemas/Course'
+        instructor_id:
+          $ref: '#/components/schemas/User'
+        title:
+          type: string
+        time_limit:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - course_id
+        - instructor_id
+        - title
+        - time_limit
+    Review:
+      type: object
+      properties:
+        _id:
+          type: string
+        user_id:
+          $ref: '#/components/schemas/User'
+        course_id:
+          $ref: '#/components/schemas/Course'
+        comment:
+          type: string
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - course_id
+        - rating
+    Submission:
+      type: object
+      properties:
+        _id:
+          type: string
+        assignment_id:
+          $ref: '#/components/schemas/Assignment'
+        user_id:
+          $ref: '#/components/schemas/User'
+        submission_url:
+          type: string
+        grade:
+          type: number
+        feedback:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - assignment_id
+        - user_id
+        - submission_url
+    Assignment:
+      type: object
+      properties:
+        _id:
+          type: string
+        course_id:
+          $ref: '#/components/schemas/Course'
+        instructor_id:
+          $ref: '#/components/schemas/User'
+        title:
+          type: string
+        description:
+          type: string
+        max_points:
+          type: number
+        status:
+          type: string
+          enum: [active, closed]
+        due_date:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - course_id
+        - instructor_id
+        - title
+        - max_points
+        - due_date
+    Coupon:
+      type: object
+      properties:
+        _id:
+          type: string
+        code:
+          type: string
+        expireDate:
+          type: string
+          format: date-time
+        discount:
+          type: number
+        maxUses:
+          type: number
+        usedCount:
+          type: number
+        applicableCourses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Course'
+        userId:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - code
+        - expireDate
+        - discount
