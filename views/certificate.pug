@@ -1,0 +1,119 @@
+doctype html
+html
+  head
+    title Certificate of Completion
+    link(href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet")
+    style.
+      body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+      .cert-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .cert {
+        background: #fff;
+        border: 8px solid #e5c07b;
+        border-radius: 32px;
+        box-shadow: 0 8px 32px #bfa14a44, 0 1.5px 0 #fff inset;
+        padding: 48px 64px;
+        max-width: 700px;
+        width: 100%;
+        position: relative;
+        font-family: 'Montserrat', sans-serif;
+      }
+      .cert .logo {
+        margin-bottom: 24px;
+      }
+      .cert .gold-title {
+        color: #bfa14a;
+        font-size: 2.8rem;
+        font-family: 'Montserrat', sans-serif;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+        font-weight: 900;
+        text-shadow: 0 2px 8px #e5c07b55;
+      }
+      .cert .subtitle {
+        color: #222;
+        font-size: 1.2rem;
+        margin-bottom: 32px;
+        font-weight: 700;
+      }
+      .cert .student-name {
+        color: #2e86de;
+        font-size: 2.2rem;
+        font-weight: 900;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+      }
+      .cert .course-title {
+        color: #222;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 24px;
+      }
+      .cert .date {
+        color: #888;
+        font-size: 1.1rem;
+        margin-bottom: 32px;
+      }
+      .cert .signature {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: 40px;
+      }
+      .cert .sign {
+        text-align: center;
+      }
+      .cert .sign .sign-name {
+        font-weight: 700;
+        color: #bfa14a;
+        font-size: 1.1rem;
+        margin-top: 8px;
+        letter-spacing: 1px;
+      }
+      .cert .seal {
+        width: 80px;
+        height: 80px;
+        background: radial-gradient(circle, #fff 60%, #bfa14a 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        color: #bfa14a;
+        font-weight: 900;
+        box-shadow: 0 2px 8px #bfa14a55;
+        border: 3px solid #bfa14a;
+        margin-right: 32px;
+      }
+      .cert .footer {
+        margin-top: 32px;
+        color: #aaa;
+        font-size: 1rem;
+        letter-spacing: 1px;
+      }
+  body
+    .cert-container
+      .cert
+        if logoUrl
+          img.logo(src=logoUrl, width="120")
+        .gold-title Certificate of Completion
+        .subtitle This is to certify that
+        .student-name #{studentName}
+        .subtitle has successfully completed the course
+        .course-title #{courseTitle}
+        .date Awarded on #{date}
+        .signature
+          .seal 🏅
+          .sign
+            .sign-name LMS
+        .footer
+          | Certificate ID: #{certificateId} &nbsp; | &nbsp; Issued by LMS Platform 

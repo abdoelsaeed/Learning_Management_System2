@@ -39,6 +39,8 @@
     "pg": "^8.16.0",
     "pptxgenjs": "^4.0.0",
     "promisify": "^0.0.3",
+    "pug": "^3.0.3",
+    "puppeteer": "^24.11.2",
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "speakeasy": "^2.0.0",
@@ -47,6 +49,7 @@
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.24",
     "validator": "^13.15.0",
+    "view-engine": "^1.1.1",
     "xss": "^1.0.15",
     "yamljs": "^0.3.0"
   }

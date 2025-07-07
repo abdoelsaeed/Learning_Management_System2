@@ -7,7 +7,7 @@ const Course = require('./../models/course.Model');
 const Enrollement = require('./../models/enrollment.Model')
 const LessonProgress = require('./../models/lessonProgress.Model');
 const streamifier = require('streamifier');
-
+const Certificate = require('./../models/certificate.Model')
 
 async function updateProgress(studentId, courseId) {
   const totalLessons = await Lesson.countDocuments({ course_id: courseId });
@@ -20,6 +20,24 @@ async function updateProgress(studentId, courseId) {
     totalLessons === 0
       ? 0
       : Math.round((completedLessons / totalLessons) * 100);
+  
+  if (progress === 100) {
+    // تحقق إذا كان هناك شهادة بالفعل
+    const existing = await Certificate.findOne({
+      receiver_id: studentId, // أو userId حسب متغيرك
+      course_id: courseId,
+    });
+    if (!existing) {
+      // جلب instructor للكورس
+      const course = await Course.findById(courseId);
+      await Certificate.create({
+        sender_id: course.instructor, // أو admin لو تحب
+        receiver_id: studentId,
+        course_id: courseId,
+      });
+      // يمكنك إرسال إيميل أو إشعار للطالب هنا
+    }
+  }
 
   await Enrollement.findOneAndUpdate(
     { user_id: studentId, course_id: courseId },

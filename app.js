@@ -16,6 +16,7 @@ const questionRouter = require('./routes/question.routes');
 const assignmentRouter = require('./routes/assignment.routes');
 const quizRouter = require('./routes/quizzes.routes');
 const enrollmentController = require("./controller/enrollment.controller");
+const certificateRouter = require("./routes/certificate.routes");
 const reviewRouter = require('./routes/review.routes');
 const submissionRouter = require('./routes/submission.routes')
 const session = require("express-session");
@@ -33,6 +34,8 @@ const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
 
 const app = express();
 
+app.set("view engine", "pug");
+app.set("views", path.join(__dirname, "views"));
 // CORS للسماح بطلبات من أي مصدر
   app.use(
     cors({
@@ -87,7 +90,7 @@ app.use("/api/v1/question", questionRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/assignment", assignmentRouter);
 app.use("/api/v1/submission", submissionRouter);
-
+app.use("/api/v1/certificates", certificateRouter);
 
 // Error handling for undefined routes
 app.all("*", (req, res, next) => {
