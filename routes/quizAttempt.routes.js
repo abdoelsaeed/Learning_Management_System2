@@ -9,7 +9,11 @@ router.use(authController.protect);
 router.post("/", quizAttemptController.submitQuiz);
 
 // جلب كل المحاولات لكويز معين
-router.get("/quiz/:quizId", quizAttemptController.getAttemptsByQuiz);
+router.get(
+  "/quiz/:quizId",
+  authController.restricted("instructor"),
+  quizAttemptController.getAttemptsByQuiz
+);
 
 // جلب كل المحاولات لمستخدم معين
 router.get("/user/:userId", quizAttemptController.getAttemptsByUser);
@@ -18,6 +22,10 @@ router.get("/user/:userId", quizAttemptController.getAttemptsByUser);
 router.get("/:attemptId", quizAttemptController.getQuizAttempt);
 
 // حذف محاولة
-router.delete("/:attemptId", quizAttemptController.deleteQuizAttempt);
+router.delete(
+  "/:attemptId",
+  authController.restricted("instructor"),
+  quizAttemptController.deleteQuizAttempt
+);
 
 module.exports = router; 
