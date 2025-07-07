@@ -17,6 +17,7 @@ const assignmentRouter = require('./routes/assignment.routes');
 const quizRouter = require('./routes/quizzes.routes');
 const enrollmentController = require("./controller/enrollment.controller");
 const certificateRouter = require("./routes/certificate.routes");
+const quizAttempRouter = require('./routes/quizAttempt.routes')
 const reviewRouter = require('./routes/review.routes');
 const submissionRouter = require('./routes/submission.routes')
 const session = require("express-session");
@@ -91,6 +92,7 @@ app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/assignment", assignmentRouter);
 app.use("/api/v1/submission", submissionRouter);
 app.use("/api/v1/certificates", certificateRouter);
+app.use("/api/v1/quiz-attemp", quizAttempRouter);
 
 // Error handling for undefined routes
 app.all("*", (req, res, next) => {

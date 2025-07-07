@@ -30,6 +30,8 @@ tags:
     description: Assignment management endpoints
   - name: Submissions
     description: Submission management endpoints
+  - name: Certificates
+    description: Certificate management endpoints
 servers:
   - url: https://learning-management-system-lms-theta.vercel.app/api/v1
     description: Production server (Vercel)
@@ -935,8 +937,6 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
-        '404':
-          description: Lesson not found
     patch:
       tags:
         - Lessons
@@ -2013,6 +2013,154 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+  /certificates/me:
+    get:
+      tags:
+        - Certificates
+      summary: Get all certificates for the current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of certificates for the current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  results:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      certificates:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Certificate'
+        '401':
+          description: Unauthorized
+
+  /certificates/{courseId}:
+    get:
+      tags:
+        - Certificates
+      summary: Get certificate for a specific course for the current user
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: courseId
+          schema:
+            type: string
+          required: true
+          description: Course ID
+      responses:
+        '200':
+          description: Certificate for the course
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      certificate:
+                        $ref: '#/components/schemas/Certificate'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Certificate not found
+
+  /certificates/view/{certificateId}:
+    get:
+      tags:
+        - Certificates
+      summary: Render certificate as HTML page
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: certificateId
+          schema:
+            type: string
+          required: true
+          description: Certificate ID
+      responses:
+        '200':
+          description: HTML certificate page
+          content:
+            text/html:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+        '404':
+          description: Certificate not found
+
+  /certificates/pdf/{certificateId}:
+    get:
+      tags:
+        - Certificates
+      summary: Download certificate as PDF
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: certificateId
+          schema:
+            type: string
+          required: true
+          description: Certificate ID
+      responses:
+        '200':
+          description: PDF file of the certificate
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '404':
+          description: Certificate not found
+
+  /lessons/{lessonId}/complete:
+    post:
+      tags:
+        - Lessons
+      summary: Mark lesson as complete (student only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: lessonId
+          schema:
+            type: string
+          required: true
+          description: Lesson ID
+      responses:
+        '200':
+          description: Lesson marked as complete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+        '403':
+          description: Not enrolled in course
+        '404':
+          description: Lesson not found
 
 components:
   securitySchemes:
@@ -2401,3 +2549,45 @@ components:
         - code
         - expireDate
         - discount
+    Certificate:
+      type: object
+      properties:
+        _id:
+          type: string
+        sender_id:
+          $ref: '#/components/schemas/User'
+        receiver_id:
+          $ref: '#/components/schemas/User'
+        course_id:
+          $ref: '#/components/schemas/Course'
+        issuedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - sender_id
+        - receiver_id
+        - course_id
+    LessonProgress:
+      type: object
+      properties:
+        _id:
+          type: string
+        student:
+          $ref: '#/components/schemas/User'
+        course:
+          $ref: '#/components/schemas/Course'
+        lesson:
+          $ref: '#/components/schemas/Lesson'
+        completed:
+          type: boolean
+      required:
+        - student
+        - course
+        - lesson
+        - completed
