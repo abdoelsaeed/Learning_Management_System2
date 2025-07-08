@@ -204,7 +204,7 @@ All sensitive data and configuration are managed via `config.env`. **Never commi
 | PORT | Server port (default: 3000) |
 | NODE_ENV | Environment (development/production) |
 | JWT_EXPIRES_IN | JWT token expiry (e.g., 1d) |
-| DATABASE_URL | PostgreSQL DB URL (for TypeORM entities) |
+| DATABASE_URL | mongo DB URL  |
 | JWT_SECRET | JWT signing secret |
 | JWT_COOKIE_EXPIRES_IN | JWT cookie expiry (days) |
 | GMAIL_USERNAME_NODEMAILER | Gmail for sending emails |
@@ -281,7 +281,7 @@ All sensitive data and configuration are managed via `config.env`. **Never commi
 - **Vercel:** Configured via `vercel.json` for serverless deployment
 - **Environment Variables:** Set all secrets in Vercel dashboard
 - **Static Files:** Served from `public/`
-- **Database:** Ensure remote DB access (MongoDB Atlas, PostgreSQL, etc.)
+- **Database:** Ensure remote DB access (MongoDB Atlas, etc.)
 
 ---
 
@@ -318,4 +318,4 @@ All sensitive data and configuration are managed via `config.env`. **Never commi
 
 ---
 
-*This README was generated to be as comprehensive and clear as possible. If you have any questions or need more details, check the code or contact the maintainer.*
+*This README was generated to be as comprehensive and clear as possible. If you have any questions or need more details, check the code or contact with me on abdoelsaeed290@gmail.com.*
