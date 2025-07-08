@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Room</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #b3c6ff 0%, #e6f0ff 100%);
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .main-wrapper {
+      display: flex;
+      gap: 0;
+      width: 800px;
+      max-width: 99vw;
+      min-height: 600px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 24px;
+      box-shadow: 0 12px 40px 0 rgba(44, 62, 80, 0.18);
+      overflow: hidden;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar {
+      background: linear-gradient(135deg, #e6f0ff 60%, #b3c6ff 100%);
+      width: 210px;
+      padding: 2rem 1rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border-right: 2px solid #b3c6ff;
+      box-shadow: 2px 0 8px 0 rgba(44, 62, 80, 0.04);
+    }
+    .sidebar h3 {
+      color: #3a5ba0;
+      font-size: 1.15rem;
+      margin: 0 0 1.2rem 0;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .user-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+    .user-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      background: #f4f8ff;
+      color: #274472;
+      margin-bottom: 0.7rem;
+      padding: 0.6rem 0.7rem;
+      border-radius: 16px;
+      font-size: 1rem;
+      box-shadow: 0 1px 4px rgba(44, 62, 80, 0.06);
+      transition: background 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .user-list li.me {
+      background: linear-gradient(90deg, #3a5ba0 60%, #b3c6ff 100%);
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(44, 62, 80, 0.10);
+    }
+    .user-list li:hover {
+      background: #d0e2ff;
+      color: #3a5ba0;
+    }
+    .user-list .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #b3c6ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: #3a5ba0;
+      font-weight: bold;
+      box-shadow: 0 1px 3px rgba(44, 62, 80, 0.08);
+    }
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      min-width: 0;
+      background: transparent;
+    }
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .chat-header .info {
+      color: #3a5ba0;
+      font-weight: bold;
+      font-size: 1.15rem;
+      letter-spacing: 0.5px;
+    }
+    .chat-header .disconnect-btn {
+      background: linear-gradient(90deg, #e74c3c 60%, #ffb3b3 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(231,76,60,0.10);
+      transition: background 0.2s;
+    }
+    .chat-header .disconnect-btn:hover {
+      background: #c0392b;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      background: #f4f8ff;
+      border-radius: 12px;
+      padding: 1.2rem 1rem 1rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .bubble {
+      display: inline-block;
+      max-width: 75%;
+      padding: 0.7rem 1.1rem;
+      border-radius: 18px 18px 18px 6px;
+      background: #f0f4fa;
+      color: #274472;
+      margin-bottom: 0.2rem;
+      box-shadow: 0 1px 4px rgba(44, 62, 80, 0.08);
+      position: relative;
+      word-break: break-word;
+      font-size: 1.05rem;
+      margin-left: 0.7rem;
+      align-self: flex-start;
+      text-align: left;
+    }
+    .bubble.me {
+      background: linear-gradient(135deg, #3a5ba0 60%, #b3c6ff 100%);
+      color: #fff;
+      border-radius: 18px 18px 6px 18px;
+      align-self: flex-end;
+      margin-left: 0;
+      margin-right: 0.7rem;
+      text-align: right;
+    }
+    .bubble .bubble-user {
+      font-size: 0.93rem;
+      font-weight: bold;
+      color: #3a5ba0;
+      margin-bottom: 0.2rem;
+      display: block;
+    }
+    .bubble.me .bubble-user {
+      color: #fff;
+    }
+    .bubble .bubble-time {
+      font-size: 0.8rem;
+      color: #7a8ca3;
+      margin-top: 0.2rem;
+      float: right;
+    }
+    .bubble.me .bubble-time {
+      color: #e6f0ff;
+    }
+    .message.system {
+      color: #888;
+      font-style: italic;
+      text-align: center;
+      background: none;
+      box-shadow: none;
+      margin: 0.5rem 0;
+    }
+    .chat-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.2rem;
+    }
+    .chat-form input[type="text"] {
+      flex: 1;
+      padding: 0.8rem;
+      border: 1.5px solid #b3c6ff;
+      border-radius: 10px;
+      font-size: 1.08rem;
+      background: #f4f8ff;
+      transition: border 0.2s;
+    }
+    .chat-form input[type="text"]:focus {
+      border: 1.5px solid #3a5ba0;
+      outline: none;
+    }
+    .chat-form button {
+      background: linear-gradient(90deg, #3a5ba0 60%, #b3c6ff 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.08rem;
+      font-weight: bold;
+      padding: 0.8rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      box-shadow: 0 1px 4px rgba(44, 62, 80, 0.08);
+    }
+    .chat-form button:hover {
+      background: #274472;
+    }
+    @media (max-width: 900px) {
+      .main-wrapper {
+        width: 99vw;
+        min-width: 0;
+      }
+      .sidebar {
+        width: 120px;
+        padding: 1.2rem 0.3rem 1rem 0.3rem;
+      }
+      .user-list .avatar {
+        width: 26px;
+        height: 26px;
+        font-size: 1rem;
+      }
+    }
+    @media (max-width: 700px) {
+      .main-wrapper {
+        flex-direction: column;
+        width: 99vw;
+        min-width: 0;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 2px solid #b3c6ff;
+        flex-direction: row;
+        align-items: flex-start;
+        padding: 1rem 0.5rem 1rem 0.5rem;
+      }
+      .user-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .user-list li {
+        margin-bottom: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-wrapper">
+    <aside class="sidebar">
+      <h3>Room Members</h3>
+      <ul class="user-list" id="userList">
+        <!-- Members will be injected here -->
+      </ul>
+    </aside>
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="info">
+          <span id="userDisplay"></span> | <span id="roomDisplay"></span>
+        </div>
+        <button class="disconnect-btn" id="disconnectBtn">Disconnect</button>
+      </div>
+      <div class="messages" id="messages"></div>
+      <form class="chat-form" id="chatForm" autocomplete="off">
+        <input type="text" id="messageInput" placeholder="Type your message..." required />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    // Get username and room from URL
+    function getQueryParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || '';
+    }
+    const username = getQueryParam('username');
+    const room = getQueryParam('room');
+    document.getElementById('userDisplay').textContent = username;
+    document.getElementById('roomDisplay').textContent = room;
+
+    // Connect to Socket.io
+    const socket = io();
+
+    // Join room
+    socket.emit('joinRoom', { username, room });
+
+    // Update members list
+    socket.on('roomUsers', (data) => {
+      updateUserList(data.users);
+    });
+
+    // Show join notification
+    socket.on('userJoined', (data) => {
+      addSystemMessage(`${data.username} has joined the chat.`);
+    });
+
+    // Show disconnect notification
+    socket.on('userLeft', (data) => {
+      addSystemMessage(`${data.username} has left the chat.`);
+    });
+
+    // Show chat messages
+    socket.on('chat message', (data) => {
+      addMessage(data.username, data.message, data.username === username);
+    });
+
+    // Send message
+    document.getElementById('chatForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const msg = input.value.trim();
+      if(msg) {
+        socket.emit('chat message', { username, room, message: msg });
+        input.value = '';
+      }
+    });
+
+    // Disconnect button
+    document.getElementById('disconnectBtn').onclick = function() {
+      socket.disconnect();
+      window.location.href = '/home.html';
+    };
+
+    // Add message to chat (bubble style)
+    function addMessage(user, msg, isMe = false) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'bubble' + (isMe ? ' me' : '');
+      div.innerHTML = `<span class=\"bubble-user\">${user}</span>${msg}<span class=\"bubble-time\">${getTime()}</span>`;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+    // Add system message
+    function addSystemMessage(msg) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'message system';
+      div.textContent = msg;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+    // Update user list in sidebar
+    function updateUserList(users) {
+      const userList = document.getElementById('userList');
+      userList.innerHTML = '';
+      users.forEach(user => {
+        const li = document.createElement('li');
+        li.className = user.username === username ? 'me' : '';
+        // Avatar: أول حرف من الاسم أو أيقونة
+        const avatar = document.createElement('span');
+        avatar.className = 'avatar';
+        avatar.textContent = user.username.charAt(0).toUpperCase();
+        li.appendChild(avatar);
+        li.appendChild(document.createTextNode(user.username));
+        userList.appendChild(li);
+      });
+    }
+    // Get current time as HH:MM
+    function getTime() {
+      const now = new Date();
+      return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    }
+  </script>
+</body>
+</html> 

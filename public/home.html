@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Join Room</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #b3c6ff 0%, #e6f0ff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 2.5rem 2rem 2rem 2rem;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px 0 rgba(44, 62, 80, 0.15);
+      width: 350px;
+      text-align: center;
+    }
+    h2 {
+      color: #3a5ba0;
+      margin-bottom: 1.5rem;
+      letter-spacing: 1px;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #3a5ba0;
+      font-weight: 600;
+      text-align: left;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.7rem;
+      margin-bottom: 1.2rem;
+      border: 1px solid #b3c6ff;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: #f4f8ff;
+      transition: border 0.2s;
+    }
+    input[type="text"]:focus {
+      border: 1.5px solid #3a5ba0;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background: #3a5ba0;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 0.5rem;
+    }
+    button:hover {
+      background: #274472;
+    }
+    .footer {
+      margin-top: 1.5rem;
+      color: #7a8ca3;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Welcome to the Chat</h2>
+    <form id="joinForm" autocomplete="off">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required placeholder="Enter your name...">
+      <label for="room">Room Name</label>
+      <input type="text" id="room" name="room" required placeholder="e.g. general or any name">
+      <button type="submit">Join Room</button>
+    </form>
+    <div class="footer">All rights reserved &copy; 2024</div>
+  </div>
+  <script>
+    document.getElementById('joinForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const room = document.getElementById('room').value.trim();
+      if(username && room) {
+        window.location.href = `/chat.html?username=${encodeURIComponent(username)}&room=${encodeURIComponent(room)}`;
+      }
+    });
+  </script>
+</body>
+</html> 
