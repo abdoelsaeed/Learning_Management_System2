@@ -20,7 +20,7 @@
 
 ## Project Overview
 
-This project is a **Learning Management System (LMS)**  built with Node.js, Express, MongoDB (Mongoose), It provides a full backend for managing users, courses, lessons (create with cloudinary, multer), assignments, quizzes, live sessions (Zoom integration), payments (Stripe), certificates(can download as pdf by use puppeteer), chat (Socket.io), and more. The project is designed for extensibility, security, and real-world educational use cases.
+This project is a **Learning Management System (LMS)**  built with Node.js, Express, MongoDB (Mongoose), It provides a full backend for managing users, courses, lessons (create with cloudinary, multer), assignments, quizzes, live sessions (Zoom integration), payments (Stripe), certificates(can download as pdf by use puppeteer), chat (Socket.io), cron, and more. The project is designed for extensibility, security, and real-world educational use cases.
 
 ---
 
@@ -175,8 +175,8 @@ This project is a **Learning Management System (LMS)**  built with Node.js, Expr
 
 1. **Clone the repository:**
    ```bash
-   git clone <repo-url>
-   cd <project-folder>
+   git clone https://github.com/abdoelsaeed/Learning_Management_System2
+   cd Learning_Management_System2
    ```
 2. **Install dependencies:**
    ```bash
@@ -239,6 +239,9 @@ All sensitive data and configuration are managed via `config.env`. **Never commi
   - All endpoints are documented in `swagger.yaml` and available at `/api-docs`.
   - Tags: Auth, Courses, Enrollments, Coupons, Instructor Earnings, Payments, Lessons, Live Sessions, Quizzes, Questions, Reviews, Assignments, Submissions, Certificates.
   - Example: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- **Postman Collection:**
+  - You can explore and test the API using the public Postman documentation:
+    [https://www.postman.com/abdoelsaeed/lms/collection/ejipvu9/lms](https://www.postman.com/abdoelsaeed/lms/collection/ejipvu9/lms)
 
 ---
 
@@ -279,6 +282,7 @@ All sensitive data and configuration are managed via `config.env`. **Never commi
 ## Deployment
 
 - **Vercel:** Configured via `vercel.json` for serverless deployment
+- **Production Domain:** [https://learning-management-system2-abdoelsaeeds-projects.vercel.app](https://learning-management-system2-abdoelsaeeds-projects.vercel.app)
 - **Environment Variables:** Set all secrets in Vercel dashboard
 - **Static Files:** Served from `public/`
 - **Database:** Ensure remote DB access (MongoDB Atlas, etc.)
