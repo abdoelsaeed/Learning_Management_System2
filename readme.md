@@ -252,7 +252,7 @@ All sensitive data and configuration are managed via `config.env`. **Never commi
 - **Sessions & JWT:** Secure user sessions and stateless auth
 - **Input Validation:** On all endpoints (validator, express-validator)
 - **XSS Protection:** xss package
-- **SQL Injection Protection:** TypeORM and Mongoose
+- **SQL Injection Protection:** Mongoose
 - **Password Hashing:** bcryptjs
 - **OAuth:** Passport.js (Google, Facebook)
 - **2FA:** Speakeasy + QR code
