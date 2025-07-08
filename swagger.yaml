@@ -2808,3 +2808,84 @@ components:
         - quiz_id
         - user_id
         - score
+
+x-socket-events:
+  description: |
+    ## WebSocket (Socket.io) Events
+    The following events are used for real-time chat functionality via Socket.io. Connect to the server using Socket.io and emit/listen to these events as described below.
+
+  events:
+    joinRoom:
+      direction: client-to-server
+      payload:
+        type: object
+        properties:
+          username:
+            type: string
+            description: The user's display name
+          room:
+            type: string
+            description: The chat room name
+      description: |
+        Join a chat room. The server will add the user to the room and notify others.
+
+    chat message:
+      direction: client-to-server
+      payload:
+        type: object
+        properties:
+          username:
+            type: string
+            description: The user's display name
+          room:
+            type: string
+            description: The chat room name
+          message:
+            type: string
+            description: The chat message content
+      description: |
+        Send a chat message to the current room. The server will broadcast it to all users in the room.
+
+    roomUsers:
+      direction: server-to-client
+      payload:
+        type: object
+        properties:
+          users:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: Socket ID
+                username:
+                  type: string
+                  description: The user's display name
+                room:
+                  type: string
+                  description: The chat room name
+      description: |
+        Sent by the server to update the list of users in the room.
+
+    userJoined:
+      direction: server-to-client
+      payload:
+        type: object
+        properties:
+          username:
+            type: string
+            description: The username of the user who joined
+      description: |
+        Sent by the server to notify that a user has joined the room.
+
+    userLeft:
+      direction: server-to-client
+      payload:
+        type: object
+        properties:
+          username:
+            type: string
+            description: The username of the user who left
+      description: |
+        Sent by the server to notify that a user has left the room.
