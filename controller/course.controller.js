@@ -150,51 +150,63 @@ exports.updateCourse = catchAsync(async(req,res,next)=>{
 
 
 exports.getOneCourse = catchAsync(async (req, res, next) => {
-    const role = req.user && req.user.role ? req.user.role : null;
     const courseId = req.params.id;
-    let course
-    if(!req.user) course = await Course.findOne({
-        _id: courseId,
-        status: "published",
-    });
-    else{
-    //* if user
-    if(role === "student"){
-        course = await Course.findOne({
-        _id: courseId,
-        status: "published",
-        });
-    }
-
-    //^ if instructor
-    if(role === "instructor"&& req.user.id.toString() ){
+    let course;
+    
+    // إذا لم يكن المستخدم مسجل دخول
+    if(!req.user) {
         course = await Course.findOne({
             _id: courseId,
-            $or: [
-            { status: "published" },
-            { status: "draft", instructor: req.user.id }
-            ]
+            status: "published",
         });
+    }
+    else {
+        const role = req.user.role;
         
-    }
+        //* if student
+        if(role === "student"){
+            course = await Course.findOne({
+                _id: courseId,
+                status: "published",
+            });
+        }
 
-    //& if admin
-    if(role === "admin"){
-        course = await Course.findById(courseId);
+        //^ if instructor
+        else if(role === "instructor"){
+            course = await Course.findOne({
+                _id: courseId,
+                $or: [
+                    { status: "published" },
+                    { status: "draft", instructor: req.user.id }
+                ]
+            });
+        }
+
+        //& if admin
+        else if(role === "admin"){
+            course = await Course.findById(courseId);
+        }
+        
+        // للمستخدمين غير المحددين
+        else {
+            course = await Course.findOne({
+                _id: courseId,
+                status: "published",
+            });
+        }
     }
-    // لو الكورس مش موجود أو مش draft
+    
+    // لو الكورس مش موجود
     if (!course) {
-        return next(new AppError("Course not found ", 404));
+        return next(new AppError("Course not found", 404));
     }
-
 
     // لو الأمور تمام، رجّع الكورس
     res.status(200).json({
         status: "success",
         data: course,
     });
-    });
-
+});
 
  exports.deleteCourse = catchAsync(async (req, res, next) => {
   const role = req.user && req.user.role ? req.user.role : null;
