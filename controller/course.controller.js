@@ -153,6 +153,11 @@ exports.getOneCourse = catchAsync(async (req, res, next) => {
     const role = req.user && req.user.role ? req.user.role : null;
     const courseId = req.params.id;
     let course
+    if(!req.user) course = await Course.findOne({
+        _id: courseId,
+        status: "published",
+    });
+    else{
     //* if user
     if(role === "student"){
         course = await Course.findOne({

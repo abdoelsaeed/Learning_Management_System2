@@ -15,6 +15,10 @@ exports.generateTwoFactorSecret = catchAsync(async(req,res,next)=>{
   if(!user){
     return next(new AppError("User not found",404));
   }
+  if (user.isTwoFactorEnabled && user.twoFactorSecret) {
+    // لا تنشئ secret جديد إذا كان مفعل بالفعل
+    return res.status(400).json({ message: "2FA already enabled" });
+  }
   const secret = speakeasy.generateSecret({name:"LMS:"+user.email});
   user.twoFactorSecret=secret.base32;
   user.isTwoFactorEnabled = true;
@@ -146,7 +150,6 @@ exports.logIn = catchAsync(async (req, res, next) => {
     );
   }
   const isPasswordCorrect = await bcrypt.compare(password, user.password);
-  console.log('isPasswordCorrect:', isPasswordCorrect);
   
   if (!isPasswordCorrect) {
     return next(new AppError("Invalid email or password", 401));
