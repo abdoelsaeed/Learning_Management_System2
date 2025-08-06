@@ -38,14 +38,14 @@ const app = express();
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
 // CORS للسماح بطلبات من أي مصدر
-  app.use(
-    cors({
-      origin: "http://localhost:5173", // أو الدومين بتاع الفرونت
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "stripe-signature"],
-    })
-  );
+app.use(
+  cors({
+    origin: true, // يقبل أي domain
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "stripe-signature"],
+  })
+);
 
 // Webhook endpoint *قبل* أي middlewares بتعدّل الـ body
 app.post(
